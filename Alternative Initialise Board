@@ -1,0 +1,11 @@
+def initialiseBoard(width):
+    midlower=int(width/2-1)
+    midupper=int(width/2)
+    if width%2==1: return 'Board must be an even width.'    #error checking
+    if width<4: return 'Board width must be at least 4.'
+    board=[[0 for k in range(width)]for k in range(width)]  #blank board
+    board[midlower][midlower]=1                             #placing 4 starting pieces
+    board[midlower][midupper]=-1
+    board[midupper][midlower]=-1
+    board[midupper][midupper]=1
+    return board
