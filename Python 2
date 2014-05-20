@@ -32,7 +32,22 @@ def drawBoard(board):
     return[]
 
 def move(b,m,p):
-    return[]
+    direction = m[2];
+    r = m[0];
+    c = m[1];
+    if(p==1): #Set the value of the first element
+        b[r][c] = 1;
+    else:
+        b[r][c] = -1;
+
+    for mv in direction: #Cycle through direction
+        if(p==1):
+            if(b[r + mv[0]][c + mv[1]] < 0):
+                b[r + mv[0]][c + mv[1]] = abs(b[r + mv[0]][c + mv[1]]) + 1;
+        else:
+            if(b[r + mv[0]][c + mv[1]] > 0):
+                b[r + mv[0]][c + mv[1]] = -((b[r + mv[0]][c + mv[1]]) + 1);
+    return b;
 
 def legalDirection(r,c,b,p,u,v):
     return[]
