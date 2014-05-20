@@ -1,3 +1,11 @@
+"""
+Program: project2.py
+Authors: Thomas Miller (21469815)
+		 Peter Joseph (21284021)
+		 
+		 Performs a game of Othello
+"""
+
 def initialiseBoard(width):
     midlower=int(width/2-1)
     midupper=int(width/2)
