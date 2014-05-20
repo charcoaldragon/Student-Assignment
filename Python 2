@@ -32,14 +32,14 @@ def drawBoard(board):
         for square in row:
             drawsquare(squarexlocation,squareylocation,squarewidth)
             if square!= 0:
-                drawpiece(squarenum,rownum,board,str(square).isdigit())
+                drawpiece(rownum,squarenum,board,square/abs(square))
             squarexlocation+=squarewidth
             squarenum+=1
         squareylocation+=squarewidth
         rownum+=1
     ts.update()
 
-def drawpiece(column,row,board,player):
+def drawpiece(row,column,board,player):
     squarewidth=boardwidth//(len(board)+2)
     piecexlocation=(-boardwidth//2)+((3/2)*squarewidth)+(column*squarewidth)
     pieceylocation=(-boardwidth//2)+((21/20)*squarewidth)+(row*squarewidth)
@@ -66,7 +66,7 @@ def move(b,m,p):
     direction = m[2];
     r = m[0];
     c = m[1];
-    if(p==1): #Set the value of the first element
+    if(p==1): #Set the value of the first element #These p==1 statements can be replaced with the value of p
         b[r][c] = 1;
     else:
         b[r][c] = -1;
@@ -87,7 +87,7 @@ def move(b,m,p):
 
 def legalDirection(r, c, b, p, u, v):
     ct = 0; p1Count = 0; p2Count = 0;
-    if(p==1):
+    if(p==1): #code is duplicated by split without any changes
         while (ct < len(b)):
             object = b[r + (u * ct)][c + (v * ct)]
             if(object > 0):
@@ -139,6 +139,5 @@ def main():
         boardwidth=ts.window_height()
     else: boardwidth=ts.window_width()
     players={1:'Black',-1:'White'}
-    colours={True:'Black',False:'White'}
-    drawBoard(initialiseBoard(int(ts.numinput('Board Size','How many (even) rows on the board?(n>4)',4))))
-    return[]
+    b=initialiseBoard(int(ts.numinput('Board Size','How many (even) rows on the board?(n>4)',4)))
+    drawBoard(b)
