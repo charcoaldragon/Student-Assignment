@@ -77,8 +77,32 @@ def move(b,m,p):
                 ct+=1;
     return b;
 
-def legalDirection(r,c,b,p,u,v):
-    return[]
+def legalDirection(r, c, b, p, u, v):
+    ct = 0; p1Count = 0; p2Count = 0;
+    if(p==1):
+        while (ct < len(b)):
+            object = b[r + (u * ct)][c + (v * ct)]
+            if(object > 0):
+                p1Count+=1
+            elif(object < 0):
+                p2Count+=1
+            ct+=1
+        if(p1Count >= 1 and p2Count >= 1):
+            return True
+        else:
+            return False
+    else:
+        while (ct < len(b)):
+            object = b[r + (u * ct)][c + (v * ct)]
+            if(object > 0):
+                p1Count+=1
+            elif(object < 0):
+                p2Count+=1
+            ct+=1
+        if(p1Count >= 1 and p2Count >= 1):
+            return True
+        else:
+            return False
 
 def legalMove(r,c,b,p):
     return[]
