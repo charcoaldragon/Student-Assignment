@@ -1,35 +1,58 @@
 def initialiseBoard(width):
-    board=[]
-    if not width%2==0:
-        return('Board must be an even width.')
+    midlower=int(width/2-1)
+    midupper=int(width/2)
+    if width%2==1:
+        print('Board must be an even width.')    #error checking
+        return []
     if width<4:
-        return('Board width must be at least 4')
-    lowermid=(width/2)-1
-    uppermid=(width/2)
-    for numberrow in range(width):
-        row=[]
-        for square in range(width):
-            if numberrow==lowermid or numberrow==uppermid:
-                if square==lowermid or square==uppermid:
-                    if square==numberrow:
-                        row.append(1)
-                    else:
-                        row.append(-1)
-                else:
-                    row.append(0)
-            else:
-                row.append(0)
-            print(square)
-            print(numberrow)
-            print(row)
-        board.append(row)
-        print(board)
-        print(lowermid)
-        print(uppermid)
+        print('Board width must be at least 4.')
+        return []
+    board=[[0 for k in range(width)]for k in range(width)]  #blank board
+    board[midlower][midlower]=1                             #placing 4 starting pieces
+    board[midlower][midupper]=-1
+    board[midupper][midlower]=-1
+    board[midupper][midupper]=1
     return board
 
 def drawBoard(board):
-    return[]
+    squarewidth=boardwidth//((len(board))+2)
+    squareylocation=-boardwidth//2+squarewidth
+    rownum=0
+    for row in board:
+        squarexlocation=-boardwidth/2+squarewidth
+        squarenum=0
+        for square in row:
+            drawsquare(squarexlocation,squareylocation,squarewidth)
+            if square!= 0:
+                drawpiece(squarenum,rownum,board,str(square).isdigit())
+            squarexlocation+=squarewidth
+            squarenum+=1
+        squareylocation+=squarewidth
+        rownum+=1
+    ts.update()
+
+def drawpiece(column,row,board,player):
+    squarewidth=boardwidth//(len(board)+2)
+    piecexlocation=(-boardwidth//2)+((3/2)*squarewidth)+(column*squarewidth)
+    pieceylocation=(-boardwidth//2)+((21/20)*squarewidth)+(row*squarewidth)
+    t.up()
+    t.goto(piecexlocation,pieceylocation)
+    t.down()
+    t.fillcolor((colours[player]))
+    t.begin_fill()
+    t.circle((squarewidth*9)//20)
+    t.end_fill()
+    
+def drawsquare(x,y,size): 
+    t.up()
+    t.goto(x,y)
+    t.down()
+    t.fillcolor((20,120,10))
+    t.begin_fill()
+    for steps in range(4):
+        t.fd(size)
+        t.left(90)
+    t.end_fill() 
 
 def move(b,m,p):
     direction = m[2];
@@ -66,8 +89,24 @@ def moves(b,p):
 def selectMove(ms,b,p):
     return[]
 
-def scoreBoard(b):
-    return[]
+def scoreBoard(board):
+    Blackscore=sum([board[y][x] for y in range(len(board)) for x in range(len(board)) if str(board[y][x]).isdigit()])
+    Whitescore=abs(sum([board[y][x] for y in range(len(board)) for x in range(len(board)) if not str(board[y][x]).isdigit()]))
+    return (Blackscore,Whitescore)
 
 def main():
+    t=turtle.Turtle()
+    t.hideturtle()
+    t.speed('fastest')
+    t.pensize(2)
+    ts=t.getscreen()
+    ts.bgcolor('brown')
+    ts.colormode(255)
+    ts.tracer(0)
+    if ts.window_height()<ts.window_width():
+        boardwidth=ts.window_height()
+    else: boardwidth=ts.window_width()
+    players={1:'Black',-1:'White'}
+    colours={True:'Black',False:'White'}
+    drawBoard(initialiseBoard(int(ts.numinput('Board Size','How many (even) rows on the board?(n>4)',4))))
     return[]
