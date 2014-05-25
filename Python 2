@@ -113,7 +113,14 @@ def legalDirection(r, c, b, p, u, v):
             return False
 
 def legalMove(r,c,b,p):
-    return[]
+    legalMove = []
+    moves = [(u,v) for u in [-1,0,1] for v in [-1,0,1]]
+    for move in moves:
+        testMove = legalDirection(r,c,b,p,move[0],move[1])
+        if(testMove == True):
+            legalMove.append((move[0],move[1]))
+            print(move[1])
+    return legalMove
 
 def moves(b,p):
     return[]
