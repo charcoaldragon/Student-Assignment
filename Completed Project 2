@@ -1,0 +1,334 @@
+"""
+Program: project2.py
+Version: 2.11
+Authors: Thomas Miller
+         Peter Joseph
+
+Performs a game of Othello
+
+Legend of common names:
+t  = turtle
+ts = turtle screen
+scoret = scoreboard turtle
+b  = board
+p  = player
+r  = row
+c  = column
+u  = vertical capture direction
+v  = horizontal capture direction
+h  = human
+hp = human player
+D  = Difficulty Variable
+H  = High Difficulty
+L  = Low Difficulty
+mv = move
+ms = moves
+sq = square
+*len = ****length
+n* = new****
+playes = dictionary for helping in colour selection and text prompts
+ptype = dictionary for determining how a turn is controlled
+"""
+
+import turtle
+import copy
+import time
+import random
+import tkinter
+
+def initialiseBoard(width):
+    if width%2==1:
+        print('Board must be an even width.')           #error checking
+        return initialiseBoard(int(ts.numinput('Board Size','How many (EVEN) rows on the board?(n>4)',8,4)))
+    midlower=int(width/2-1)
+    midupper=int(width/2)
+    b=[[0 for k in range(width)]for k in range(width)]  #blank board
+    b[midlower][midlower]=1                             #placing 4 starting pieces
+    b[midlower][midupper]=-1
+    b[midupper][midlower]=-1
+    b[midupper][midupper]=1
+    return b
+
+def drawBoard(b):
+    sqlen=(blen-100)/(len(b))
+    sqypos=-blen/2+50
+    for c in range(len(b)):
+        clabel='C'+str(c+1)
+        t.up()
+        t.goto(-blen/2+50+sqlen/2+c*sqlen,-blen/2+50-4*sqlen/10)
+        t.pencolor('white')
+        t.write(clabel,False,'center',('Ariel',int(sqlen//4),'bold'))    
+    for r in range(len(b)):
+        t.pencolor('white')
+        rlabel='R'+str(r+1)
+        t.up()
+        t.goto(-blen/2+45,sqypos+sqlen/3)
+        t.write(rlabel,False,'right',('Ariel',int(sqlen//4),'bold'))
+        t.pencolor('black')
+        sqxpos=-blen/2+50
+        for c in range(len(b)):
+            drawsquare(sqxpos,sqypos,sqlen)
+            if b[r][c]!= 0:
+                drawpiece(r,c,b,b[r][c]/abs(b[r][c]))
+            sqxpos+=sqlen
+        sqypos+=sqlen
+    drawScoreBoard(b)
+    ts.update()
+
+def drawScoreBoard(b):
+    scoret.clear()
+    scoret.pencolor('white')
+    scoret.up()
+    scoret.goto(-blen/2+50,blen/2-45)
+    scoret.write('Black:',False,'left',('Ariel',20,'bold'))
+    scoret.goto(blen/2-50,blen/2-45)
+    scoret.write(':White',False,'right',('Ariel',20,'bold'))
+    scoret.goto(0,blen/2-45)
+    scoret.write(scoreBoard(b),False,'center',('Ariel',20,'bold'))
+
+
+def drawpiece(r,c,b,p):
+    sqlen=(blen-100)/len(b)
+    xpos=(-blen/2+50)+((1/2)*sqlen)+(c*sqlen)
+    ypos=(-blen/2+50)+((1/20)*sqlen)+(r*sqlen)
+    t.up()
+    t.goto(xpos,ypos)
+    t.down()
+    t.fillcolor((players[p]))
+    t.begin_fill()
+    t.circle((sqlen*9)/20)
+    t.pencolor(players[-p])
+    t.write(abs(b[r][c]),False,'center',('Arial', int(sqlen//2), 'bold'))
+    t.pencolor('black')
+    t.end_fill()
+
+def drawpieceoutline(r,c,b,p):
+    sqlen=(blen-100)/len(b)
+    xpos=(-blen/2+50)+((1/2)*sqlen)+(c*sqlen)
+    ypos=(-blen/2+50)+((1/20)*sqlen)+(r*sqlen)
+    outlinet.up()
+    outlinet.goto(xpos,ypos)
+    outlinet.down()
+    outlinet.circle((sqlen*9)/20)
+    
+def drawsquare(x,y,size): 
+    t.up()
+    t.goto(x,y)
+    t.down()
+    for side in range(4):
+        t.fd(size)
+        t.left(90)
+    
+def move(b,mv,p):
+    r = mv[0]
+    c = mv[1]
+    directions = mv[2]
+    b[r][c]= p                                          #Changes Blank space into player piece
+    drawpiece(r,c,b,p)                                  #Draws player piece
+    outlinet.clear()
+    drawpieceoutline(r,c,b,p)
+    for (u,v) in directions:                            #Cycle through directions of the particular move
+        check=0
+        for k in range(1,len(b)):
+            nr=r+u*k
+            nc=c+v*k
+            if check==0:
+                squarevalue=b[nr][nc]
+                if squarevalue/abs(squarevalue)!= p:    #Assumes correct moves from previous functions
+                    b[nr][nc] = (-(squarevalue-p))
+                    drawpiece(nr,nc,b,p)
+                    drawpieceoutline(nr,nc,b,p)
+                else: check+=1
+    drawScoreBoard(b)
+    ts.update()
+    return b
+
+def trymove(b,mv,p):                #for computer making theoretical moves on a fake board without drawing
+    r = mv[0]
+    c = mv[1]
+    directions = mv[2]
+    b[r][c]= p
+    for (u,v) in directions:                            
+        check=0
+        for k in range(1,len(b)):
+            nr=r+u*k
+            nc=c+v*k
+            if check==0:
+                squarevalue=b[nr][nc]
+                if squarevalue/abs(squarevalue)!= p:
+                    b[nr][nc] = (-(squarevalue-p))
+                else: check+=1
+    return b
+
+def legalDirection(r,c,b,p,u,v): #does the direction capture pieces
+    check=0
+    for k in range(1,len(b)):
+        nr=r+u*k
+        nc=c+v*k
+        if nr>=0 and nr<len(b) and nc>=0 and nc<len(b):     #If new square is on the Board
+            sqvalue=b[nr][nc]
+            if sqvalue==0:                                          #Cannot capture over blank squares
+                return False
+            elif sqvalue/abs(sqvalue)==-p:                      #Must find at least one opponent piece
+                check+=1
+            elif sqvalue/abs(sqvalue)==p and check>0:           #Must find own piece at end point and at least 1 opponent piece in between
+                return True
+            else:
+                return False
+        else:
+            return False
+
+def legalMove(r,c,b,p):
+    if b[r][c]==0:
+        return [(u,v) for u in [-1,0,1] for v in [-1,0,1] if (u,v)!=(0,0) if legalDirection(r,c,b,p,u,v)] #list of capture directions for a legal move
+    else: return []
+
+def moves(b,p):
+    return [(r,c,legalMove(r,c,b,p)) for r in range(len(b)) for c in range(len(b)) if legalMove(r,c,b,p)!=[]] #list of legal moves that can be selected by a player
+
+def selectMove(ms,b,p):
+    if len(ms)==1:
+        return ms[0]
+    else:
+        scoreofmoves=[]
+        for mv in ms:
+            r=mv[0]
+            c=mv[1]
+            if (r,c)==(0,0) or (r,c)==(len(b)-1,0) or (r,c)==(0,len(b)-1) or (r,c)==(len(b)-1,len(b)-1):
+                return mv                                   #prioritises corner squares
+        for mv in ms:
+            if mv[0]==0 or mv[1]==0 or mv[0]==len(b)-1 or mv[1]==len(b)-1:
+                return mv                                   #next priority: side squares
+        for mv in ms:                                       #makes the move that gives the greatest scoreboard advantage
+            nb=copy.deepcopy(b)                         #makes new board to check theoretical moves
+            scoreofmoves.append(scoreBoard(trymove(nb,mv,p)))
+        diffscores=[black - white for (black,white) in scoreofmoves]
+        if p==1:
+            return ms[diffscores.index(max(diffscores))]
+        else:
+            return ms[diffscores.index(min(diffscores))]
+
+def scoreBoard(b):
+    Blackscore=sum([b[r][c] for r in range(len(b)) for c in range(len(b)) if str(b[r][c]).isdigit()])
+    Whitescore=abs(sum([b[r][c] for r in range(len(b)) for c in range(len(b)) if not str(b[r][c]).isdigit()]))
+    return (Blackscore,Whitescore)
+
+def CompTurn(b,p,D):
+    time.sleep(.25)
+    if D == 'L':
+        move(b,random.choice(moves(b,p)),p)
+    elif D == 'H':
+        move(b,selectMove(moves(b,p),b,p),p)
+    
+def HumanTurn(b,p):
+    ts.update()
+    if True:
+       time.sleep(.1) #give up thread
+       if legalMove(position[0],position[1],b,p)==[]:
+          HumanTurn(b,p)
+       else:
+          move(b,(position[0],position[1],legalMove(position[0],position[1],b,p)),p)
+          waiting[0]=False
+          position[0]=-1
+          position[1]=-1
+          
+def getClickPosition(x, y): #Turn Cartesian coordinates into Tile coordinates
+   length = float(blen-100)
+   tileSize = float(length / boardSize[0])
+   xAdj=x+length/2
+   yAdj=y+length/2
+   column = int(xAdj // tileSize)
+   row = int(yAdj // tileSize)
+   if row>=0 and row<boardSize[0] and column>=0 and column<boardSize[0]: #Only return a value if click inside Canvas and not on extra tiles
+      position[0] = row
+      position[1] = column
+
+def main():
+    numhumans=ts.numinput('Players','How many Human players: [0,1,2]',1,0,2)                                #Pre-game setup
+    if numhumans==1:
+        pcolour=ts.numinput('Colour','Would you like to play 1st (Black) or 2nd (White) [1,2]',1,1,2)
+        compdifficulty=ts.textinput('Difficulty',"Computer Difficulty: 'H' (High) or 'L' (Low)")
+        while compdifficulty.upper()!='H' and compdifficulty.upper()!='L':
+            compdifficulty=ts.textinput('Difficulty',"Computer Difficulty: (Please Select H or L):")
+        if pcolour==1:
+            ptype[1]  = 'HUMAN'
+            ptype[-1] = compdifficulty.upper()[0]
+        else:
+            ptype[-1] = 'HUMAN'
+            ptype[1]  = compdifficulty.upper()[0]       
+    elif numhumans==2:
+        ptype[1]  = 'HUMAN'
+        ptype[-1] = 'HUMAN'
+    else:
+        ptype[1]  = 'L'
+        ptype[-1] = 'L'
+    b=initialiseBoard(int(ts.numinput('Board Size','How many (even) rows on the board?[n>=4]',8,4)))
+    boardSize.append(len(b))
+    drawBoard(b)
+    p=-1
+    for turn in range(len(b)**2-4):
+        p=-p
+        if moves(b,p)==[]:                              #Is there a legal move
+            if moves(b,-p)==[]:                         #Can neither player move
+                tkinter.messagebox.showinfo('GAME OVER',"No Legal Moves")
+                break
+            else:
+                tkinter.messagebox.showinfo('Turn skipped',players[p]+"'s Turn skipped")
+                p=-p                                    #Player's turn is skipped
+                if ptype[p]=='HUMAN':
+                    waiting[0]=True
+                    HumanTurn(b,p)
+                else:
+                    CompTurn(b,p,ptype[p])
+        else:
+            if ptype[p]=='HUMAN':
+                waiting[0]=True
+                HumanTurn(b,p)
+            else:
+                CompTurn(b,p,ptype[p])                                    
+    tkinter.messagebox.showinfo('Final Score',"Black:   "+str(scoreBoard(b)[0])+'\nWhite:  '+str(scoreBoard(b)[1]))  #Game End Messages
+    if ptype[1]==ptype[-1]!='HUMAN':
+        tkinter.messagebox.showinfo('GAME OVER',"Simulation Completed")
+    elif max(scoreBoard(b))==min(scoreBoard(b)):
+        tkinter.messagebox.showinfo('GAME OVER',"It's a Draw - Better Luck Next Time")
+    elif scoreBoard(b).index(max(scoreBoard(b)))==0:
+        if ptype[1]=='HUMAN':
+            tkinter.messagebox.showinfo('BLACK WINS',"Congratulations!")
+        else:
+            tkinter.messagebox.showinfo('BLACK WINS',"Better Luck Next Time")
+    else:
+        if ptype[-1]=='HUMAN':
+            tkinter.messagebox.showinfo('WHITE WINS',"Congratulations!")
+        else:
+            tkinter.messagebox.showinfo('WHITE WINS','Better Luck Next Time')
+    input('Enter to Finish',)
+
+boardSize=[]
+t=turtle.Turtle()
+t.hideturtle()
+t.speed('fastest')
+t.pensize(2)
+scoret=turtle.Turtle()                  #Turtle dedicated to scoreboard
+scoret.hideturtle()
+scoret.speed('fastest')
+outlinet=turtle.Turtle()                  #Turtle dedicated to outlining pieces that were changed this turn
+outlinet.hideturtle()
+outlinet.speed('fastest')
+outlinet.pencolor('red')
+outlinet.pensize(3)
+ts=t.getscreen()
+ts.title("Othello")                     #Set title of Window
+displaySize = 500
+ts.setup(displaySize,displaySize)                       #Set Window Size based on boardwidth
+ts.bgpic('board.gif')
+ts.colormode(255)
+ts.tracer(0)
+if ts.window_height()<ts.window_width():    #Global variable used by later functions for size of squares and pieces
+    blen=ts.window_height()
+else: blen=ts.window_width()                  
+players={1:'Black',-1:'White'}              #Primarily for choice of fill colours and piece labeling
+ptype={1:False,-1:False}                       #Dictionary to record if player is Human or Difficulty
+position = [-1,-1]
+waiting = [True]
+ts.onclick(getClickPosition, btn=1, add=None) # Wire up a click on the window.
+main()
